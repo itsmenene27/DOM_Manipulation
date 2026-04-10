@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>My Interactive Profile</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color:	#b9e2f5;
+    color: rgb(10, 10, 10);
+}
+
+/* CONTAINER */
+.container {
+    max-width: 600px;
+    margin: 30px auto;
+    padding: 20px;
+}
+
+/* GLASS CARD */
+.card {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(12px);
+    border-radius: 15px;
+    padding: 45px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    animation: fadeIn 0.5s ease-in-out;
+    transition: 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* PROFILE */
+.profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.profile img {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid white;
+    transition: 0.3s;
+    margin-bottom: 15px;
+}
+
+.profile img:hover {
+    transform: scale(1.05);
+}
+
+.profile h2, .profile p {
+    cursor: pointer;
+    transition: 0.3s;
+    margin: 10px 0;
+}
+
+.profile h2:hover, .profile p:hover {
+    color: #50b8e7;
+}
+
+/* LIST */
+ul { list-style: none; padding: 0; }
+
+li {
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.2);
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+li:hover {
+    background: rgba(255,255,255,0.4);
+}
+
+.selected {
+    background: #00c6ff !important;
+}
+
+/* BUTTON */
+button {
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin: 5px;
+    cursor: pointer;
+    background: #42bef8;
+    color: white;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #50b8e7;
+    transform: scale(1.05);
+}
+
+/* INPUT education */
+input {
+    width: 100%;
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+    margin: 5px 0;
+}
+
+/* ANIMATION */
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(10px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- PROFILE -->
+<div class="card profile">
+    <img id="profilePic" src="documents/nmp/image/nikki.jpg" alt="Profile Picture">
+    <input type="file" id="fileInput" hidden>
+
+    <h2 id="name">Nikki</h2>
+    <button onclick="editText('name')"><i class="fa fa-pen"></i></button>
+
+    <p id="bio">If it works, don't touch it.</p>
+    <button onclick="editText('bio')"><i class="fa fa-pen"></i></button>
+</div>
+
+<!-- SKILLS -->
+<div class="card">
+    <h3><i class="fa-solid fa-gear"></i> Skills </h3>
+    <ul id="skills">
+        <li draggable="true">Time Management</li>
+        <li draggable="true">Analytical Thinking</li>
+        <li draggable="true">Digital Literacy</li>
+    </ul>
+    <button onclick="addItem('skills')"><i class="fa fa-plus"></i> Add</button>
+    <button onclick="deleteSelected('skills')"><i class="fa fa-trash"></i> Delete</button>
+</div>
+
+<!-- EDUCATION -->
+<div class="card">
+    <h3><i class="fa fa-graduation-cap"></i> Education</h3>
+    <div id="education"></div>
+    <button onclick="addEducation()"><i class="fa fa-plus"></i> Add</button>
+</div>
+
+<!-- HOBBIES -->
+<div class="card">
+    <h3><i class="fa fa-heart"></i> Hobbies</h3>
+    <ul id="hobbies">
+        <li draggable="true">Reading</li>
+        <li draggable="true">Gaming</li>
+        <li draggable="true">Music</li>
+    </ul>
+    <button onclick="addItem('hobbies')"><i class="fa fa-plus"></i> Add</button>
+    <button onclick="deleteSelected('hobbies')"><i class="fa fa-trash"></i> Delete</button>
+</div>
+
+<button onclick="resetAll()"><i class="fa fa-rotate"></i> Reset</button>
+
+</div>
+
+<script>
+let dragged;
+
+// PROFILE IMAGE
+const pic = document.getElementById("profilePic");
+const fileInput = document.getElementById("fileInput");
+
+pic.onclick = () => {
+    fileInput.click();
+    console.log("Profile image clicked");
+};
+
+fileInput.onchange = () => {
+    const reader = new FileReader();
+    reader.onload = e => {
+        pic.src = e.target.result;
+        console.log("Profile picture updated");
+        save();
+    };
+    reader.readAsDataURL(fileInput.files[0]);
+};
+
+// EDIT TEXT INLINE
+function editText(id) {
+    const el = document.getElementById(id);
+    el.contentEditable = true;
+    el.focus();
+
+    // Select all text for easy replacement
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    const saveChanges = () => {
+        el.contentEditable = false;
+        console.log(id + " edited");
+        save();
+    };
+
+    el.onblur = saveChanges;
+    el.onkeydown = e => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            saveChanges();
+        }
+    };
+}
+
+// CREATE ITEM
+function createItem(text) {
+    const li = document.createElement("li");
+    li.textContent = text;
+    li.draggable = true;
+
+    li.onclick = () => {
+        li.classList.toggle("selected");
+        console.log("Selected: " + text);
+    };
+
+    li.ondragstart = () => dragged = li;
+    li.ondragover = e => e.preventDefault();
+    li.ondrop = function () {
+        this.parentNode.insertBefore(dragged, this);
+        console.log("Item reordered");
+        save();
+    };
+
+    return li;
+}
+
+// ADD ITEM
+function addItem(id) {
+    const list = document.getElementById(id);
+    const input = document.createElement("input");
+
+    list.after(input);
+    input.focus();
+
+    input.onkeydown = e => {
+        if (e.key === "Enter") {
+            const value = input.value.trim();
+            if (value !== "") {
+                list.appendChild(createItem(value));
+                console.log(id + " added: " + value);
+                save();
+            }
+            input.remove();
+        }
+    };
+}
+
+// DELETE
+function deleteSelected(id) {
+    document.querySelectorAll(`#${id} .selected`).forEach(el => {
+        console.log("Deleted: " + el.textContent);
+        el.remove();
+    });
+    save();
+}
+
+// EDUCATION
+function addEducation() {
+    const div = document.getElementById("education");
+
+    const box = document.createElement("div");
+
+    box.innerHTML = `
+        <input placeholder="School">
+        <input placeholder="Course">
+        <input placeholder="Year">
+        <button onclick="this.parentNode.remove(); console.log('Education deleted'); save();">
+            <i class="fa fa-trash"></i>
+        </button>
+    `;
+
+    div.appendChild(box);
+    console.log("Education added");
+}
+
+// SAVE
+function save() {
+    const data = {
+        name: document.getElementById("name").innerText,
+        bio: document.getElementById("bio").innerText,
+        pic: pic.src,
+        skills: [...document.querySelectorAll("#skills li")].map(li => li.textContent),
+        hobbies: [...document.querySelectorAll("#hobbies li")].map(li => li.textContent)
+    };
+
+    localStorage.setItem("profileData", JSON.stringify(data));
+}
+
+// LOAD
+function load() {
+    const data = JSON.parse(localStorage.getItem("profileData"));
+    if (!data) return;
+
+    document.getElementById("name").innerText = data.name;
+    document.getElementById("bio").innerText = data.bio;
+    pic.src = data.pic;
+
+    loadList("skills", data.skills);
+    loadList("hobbies", data.hobbies);
+}
+
+function loadList(id, arr) {
+    const list = document.getElementById(id);
+    list.innerHTML = "";
+    arr.forEach(item => list.appendChild(createItem(item)));
+}
+
+// RESET
+function resetAll() {
+    localStorage.clear();
+    console.log("Reset to default");
+    location.reload();
+}
+
+// INIT
+document.querySelectorAll("li").forEach(li => {
+    li.replaceWith(createItem(li.textContent));
+});
+
+load();
+</script>
+
+</body>
+</html>
